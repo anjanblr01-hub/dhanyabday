@@ -13,7 +13,7 @@
             --sans:ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
         }
         *{box-sizing:border-box}
-        html{scroll-behavior:smooth;scroll-snap-type:y proximity;background:var(--night)}
+        html{scroll-behavior:smooth;scraoll-snap-type:y proximity;background:var(--night)}
         body{margin:0;background:var(--night);color:var(--cream);font-family:var(--sans);overflow-x:hidden}
         body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:
                 radial-gradient(ellipse at 15% 15%,rgba(138,76,142,.22),transparent 45%),
@@ -312,9 +312,43 @@
             memory1:  './images/smile',
             memory2:  './images/candid',
             memory3:  './images/memory'
-};
+        };
+
         const $ = (s, root=document) => root.querySelector(s);
         const $$ = (s, root=document) => [...root.querySelectorAll(s)];
+
+        // Load each photo into its matching placeholder.
+        // Try the exact deployed filename first, then common image extensions.
+        $$('[data-photo]').forEach(slot => {
+            const key = slot.dataset.photo;
+            const img = $('img', slot);
+            const basePath = PHOTO_PATHS[key];
+            if (!img || !basePath) return;
+
+            const candidates = [
+                basePath,
+                `${basePath}.jpeg`,
+                `${basePath}.jpg`,
+                `${basePath}.png`,
+                `${basePath}.webp`,
+                `${basePath}.JPEG`,
+                `${basePath}.JPG`
+            ];
+            let candidateIndex = 0;
+
+            const tryNextPhotoPath = () => {
+                if (candidateIndex < candidates.length) {
+                    img.src = candidates[candidateIndex++];
+                }
+            };
+
+            img.addEventListener('load', () => {
+                slot.classList.add('has-image');
+            });
+
+            img.addEventListener('error', tryNextPhotoPath);
+            tryNextPhotoPath();
+        });
 
         // Tiny star field, generated locally.
         const stars = $('#stars');
